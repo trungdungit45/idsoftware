@@ -27,7 +27,7 @@ def decode_base64(selft, data):
     if missing_padding != 0:
         data += b'=' * (4 - missing_padding)
     return base64.decodestring(data)
-def send_message( content, subject):
+def send_message(content, subject):
     mail = Gmail()
     session_out = smtplib.SMTP(mail.server_outgoing, mail.port_outgoing_tls)
     session_out.ehlo()

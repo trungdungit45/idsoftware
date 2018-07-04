@@ -6,7 +6,7 @@ class checkNULLScan:
         self.check = 0
         if (len(indexIP) != 0):
             xft = len(indexIP)
-            for x in range(0,xft-1):
+            for x in range(0,xft):
                 if (_listFrameEth[indexIP[x]].ipsourc == ipsource
                 and _listFrameEth[indexIP[x]].flagfin == 0 
                 and _listFrameEth[indexIP[x]].flagurg == 0 
@@ -14,7 +14,7 @@ class checkNULLScan:
                 and _listFrameEth[indexIP[x]].flagsyn == 0
                 and _listFrameEth[indexIP[x]].flagrst == 0 
                 and _listFrameEth[indexIP[x]].flagack == 0
-                and _listFrameEth[indexIP[x]].count >= 5): 
+                and _listFrameEth[indexIP[x]].count >= 5):
                     self.check = 3
         else:
             listNullScan = 0
@@ -22,6 +22,6 @@ class checkNULLScan:
                 if (_listFrameEth[x].ipsourc == ipsource 
                 and _listFrameEth[x].flagfin == 1):
                     listNullScan += 1
-            if listNullScan >= 10:
+            if listNullScan >= 4:
                 self.check = 3
         
