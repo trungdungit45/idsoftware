@@ -1,5 +1,7 @@
 class bColors:
 	c_normal = '\033[1m'
+	c_sqlinjection = '\033[96m'
+	c_udpscan = '\033[95m'
 	c_finscan = '\033[92m'
 	c_landattack = '\033[93m'
 	c_nullscan = '\033[94m'

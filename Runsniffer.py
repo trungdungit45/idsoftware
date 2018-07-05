@@ -20,6 +20,7 @@ from Detection.checkpingofdead import checkpingofDead
 from Detection.comparetime import compareTime
 from Detection.checklandattack import checkLandAttack
 from Detection.checksqlinjection import checkSqlInjection
+from Detection.checkudpscan import checkUDPscan
 
 
 from Struct.bcolor import bColors
@@ -100,7 +101,9 @@ def RefeshlistFrame(_listFrame, ipsource, ipdesti, proto,flagfin, flagsyn ,flagr
             _listFrame.remove(_listFrame[listF[x]])
     return
 def printSniffer(eth,count,_Warning):
+    el = 0
     if eth.proto == 8:
+        el = 1
         #print(TAB_1 + 'ethproto=8')
         Timeeeee = datetime.datetime.now().strftime('%H%M%S').__str__()
         ipv4 = IPv4(eth.data)
@@ -116,7 +119,7 @@ def printSniffer(eth,count,_Warning):
             tcp = TCP(ipv4.data)
             tcpinfo = 'SrcPort:{}, DestPort:{}'.format(tcp.src_port, tcp.dest_port) + ' Sequence:{}, Acknowledgment:{}'.format(tcp.sequence, tcp.acknowledgment) + 'URG: {}, ACK: {}, PSH: {}'.format(tcp.flag_urg, tcp.flag_ack, tcp.flag_psh) + 'RST: {}, SYN: {}, FIN:{}'.format(tcp.flag_rst, tcp.flag_syn, tcp.flag_fin)
             if(len(tcp.data) > 0 and (tcp.src_port ==80 or tcp.dest_port ==80)):
-                print('{0:5}\t{1:8}\t{2:15}\t\t{3:15}\t\t{4:8}\t{5:6}\t\t{6}'
+                print('{0:5}\t{1:8}\t{2:15}\t\t{3:15}\t\t{4:8}\t{5:6}\t\t{6}'   
                 .format(count,Timeeeee,ipv4.src, ipv4.target,'HTTP',len(tcp.data),_Warning))
             else:
                 print('{0:5}\t{1:8}\t{2:15}\t\t{3:15}\t\t{4:8}\t{5:6}\t\t{6}'
@@ -128,6 +131,7 @@ def printSniffer(eth,count,_Warning):
             udpinfo = 'SrcPort: {}, DestPort:{}, Length:{}'.format(udp.src_port, udp.dest_port,udp.size)
             print('{0:5}\t{1:8}\t{2:15}\t\t{3:15}\t\t{4:8}\t{5:6}\t\t{6}'
             .format(count,Timeeeee,ipv4.src, ipv4.target,'UDP',len(udp.data),_Warning))
+    return el
 def checkDosAttack():
     return 0
     return -1
@@ -144,10 +148,20 @@ def checkWarning(_Warning):
         Warningreturn = bcolor1.c_nullscan +'Null Scan'+ bcolor1.c_end
     elif _Warning == 4:
         Warningreturn = bcolor1.c_pingofdeath  +'Ping of Death'+ bcolor1.c_end
+    elif _Warning == 41:
+        Warningreturn = bcolor1.c_pingofdeath  +'Ping Active'+ bcolor1.c_end
     elif _Warning == 5:
         Warningreturn = bcolor1.c_landattack +'Land Attack'+ bcolor1.c_end
+    elif _Warning == 6:
+        Warningreturn = bcolor1.c_finscan +'UDP Scan'+ bcolor1.c_end
     elif _Warning == 9:
-        Warningreturn = 'SQL Injection'
+        Warningreturn = bcolor1.c_sqlinjection + 'SQL Injection' + bcolor1.c_end
+    elif _Warning == 91:
+        Warningreturn = bcolor1.c_sqlinjection + 'Command Injection' + bcolor1.c_end
+    elif _Warning == 92:
+        Warningreturn = bcolor1.c_sqlinjection + 'XSS reflected ' + bcolor1.c_end
+    elif _Warning == 93:
+        Warningreturn = bcolor1.c_sqlinjection + 'XSS stored' + bcolor1.c_end
     elif _Warning == 99:
         Warningreturn = bcolor1.c_normal +'Connect blackIP'+ bcolor1.c_end
     elif _Warning == 98:
@@ -166,10 +180,20 @@ def checkWarninglog(_Warning):
         Warningreturn = 'Null Scan'
     elif _Warning == 4:
         Warningreturn = 'Ping of Death'
+    elif _Warning == 41:
+        Warningreturn = 'Ping Active'
     elif _Warning == 5:
-        Warningreturn = 'Land Attack'
+        Warningreturn = 'Land Scan'
+    elif _Warning == 6:
+        Warningreturn = 'UDP Scan'
     elif _Warning == 9:
+        Warningreturn = 'Command Injection'
+    elif _Warning == 91:
         Warningreturn = 'SQL Injection'
+    elif _Warning == 92:
+        Warningreturn = 'XSS reflected '
+    elif _Warning == 93:
+        Warningreturn = 'XSS stored'
     elif _Warning == 99:
         Warningreturn = 'Warning blackIP'
     return Warningreturn
@@ -184,6 +208,7 @@ def checkSniffer(eth, _listFrameEth):
         proto = ipv4.proto
         _tcpsrc_port = 0
         _tcpdest_port = 0
+        _tcplendata = 0
         if ipv4.proto != 6:
             flagfin = 0
             flagsyn = 0
@@ -201,12 +226,15 @@ def checkSniffer(eth, _listFrameEth):
             flagurg = int(tcp.flag_urg)
             _tcpsrc_port = tcp.src_port
             _tcpdest_port = tcp.dest_port
+            _tcpldata = tcp.data
         if (ipv4.proto == 6 and _tcpsrc_port == 80 or _tcpdest_port == 80):
             _WarningEth = checkSqlInjection(HTTP(tcp.data)).check
         elif ipsource == ipdesti:
             _WarningEth = checkLandAttack(_listFrameEth, ipsource, ipdesti, proto, flagfin, flagsyn, flagrst, flagpsh, flagack, flagurg).check
         elif (proto == 1):
-            _WarningEth = checkpingofDead(_listFrameEth, ipsource, ipdesti, proto, flagfin, flagsyn, flagrst, flagpsh, flagack, flagurg).check
+            icmp = ICMP(ipv4.data)
+            _lenicmp = len(icmp.data)
+            _WarningEth = checkpingofDead(_listFrameEth, ipsource, ipdesti, proto, flagfin, flagsyn, flagrst, flagpsh, flagack, flagurg, _lenicmp).check
         elif(_WarningEth == 0 and proto == 6):
             if (flagfin == 1 
             and flagurg == 1 
@@ -224,6 +252,8 @@ def checkSniffer(eth, _listFrameEth):
             and flagurg == 0
             and proto == 6):
                 _WarningEth = checkNULLScan(_listFrameEth, ipsource, ipdesti, proto, flagfin, flagsyn ,flagrst ,flagpsh, flagack, flagurg).check
+        elif(ipv4.proto ==17 and len(UDP(ipv4.data).data) == 0):
+            _WarningEth = checkUDPscan(_listFrameEth, ipsource, ipdesti, proto, flagfin, flagsyn ,flagrst ,flagpsh, flagack, flagurg).check
         RefeshlistFrame(_listFrameEth, ipsource, ipdesti, proto,flagfin, flagsyn ,flagrst ,flagpsh ,flagack ,flagurg)
         AddtoFrame(_listFrameEth, ipsource, ipdesti, 1,proto, flagfin, flagsyn ,flagrst ,flagpsh ,flagack ,flagurg)
         if(_WarningEth != 0):
@@ -258,7 +288,7 @@ def checklistAlert(_listAlert, _ip_source, _ip_target, _num_attack):
             tempAlert.ip_target = _ip_target
             tempAlert.num_attack = _num_attack
             tempAlert.time_start = datetime.datetime.now().strftime('%H%M%S')
-            tempAlert.time_finish = ""
+            tempAlert.time_finish = "notime"
             tempAlert.time_update = datetime.datetime.now().strftime('%H%M%S')
             tempAlert.count_Warning = 0
             _listAlert.append(tempAlert)
@@ -272,7 +302,7 @@ def RefeshlistAlert(_listAlert):
                 _listAlert[x].count_Warning = 1
                 #print('Write file log '+ strlog)
                 writeLog("",strlog)
-            if (_listAlert[x].time_finish != ""):
+            if (_listAlert[x].time_finish != "notime"):
                 _list.append(x)
                 strlog = _listAlert[x].ip_source +':'+ _listAlert[x].ip_target + ':'+checkWarninglog(_listAlert[x].num_attack).__str__() +':'+ 'finish' +':'+ _listAlert[x].time_finish
                 #print('Write file log '+ strlog)
@@ -280,7 +310,7 @@ def RefeshlistAlert(_listAlert):
             if (compareTime(_listAlert[x].time_update, datetime.datetime.now().strftime('%H%M%S'))._time > 5):
                 _listAlert[x].time_finish = _listAlert[x].time_update 
         xft = len(_list)
-        for i in range(0, xft):
+        for i in range(0, xft-1):
             _listAlert.remove(_listAlert[_list[i]])
 def sniffer():
     str = 'capture' + datetime.datetime.now().strftime('%d%m%Y_%H%M%S')
@@ -293,6 +323,10 @@ def sniffer():
     .format('No','Time','Source','Destination','Protocol','Length','Info'))
     while True:
         raw_data, addr = conn.recvfrom(65535)
+        if (datetime.datetime.now().strftime('%M%S') == '0000'):
+            pcap.close()
+            str = 'capture' + datetime.datetime.now().strftime('%d%m%Y_%H%M%S')
+            pcap = Pcap('Capture/'+str+'.pcap')
         pcap.write(raw_data)
         ethernetdata = Ethernet(raw_data)
         _Warning = checkSniffer(ethernetdata, _listFrame)
@@ -303,8 +337,8 @@ def sniffer():
             checklistAlert(_listAlert, _ipsource, _iptarget, _Warning)
         RefeshlistAlert(_listAlert)
         _Warningreturn = checkWarning(_Warning)
-        printSniffer(ethernetdata, _count, _Warningreturn)
-        _count += 1
+        if(printSniffer(ethernetdata, _count, _Warningreturn) == 1):
+            _count += 1
     pcap.close()
 def sendAlert():
     while True:
