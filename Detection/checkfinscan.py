@@ -22,7 +22,7 @@ class checkFINScan:
                     and _listFrameEth[indexIP[x]].flagsyn == 0
                     and _listFrameEth[indexIP[x]].flagrst == 0 
                     and _listFrameEth[indexIP[x]].flagack == 0
-                    and _listFrameEth[indexIP[x]].count >= 5): 
+                    and _listFrameEth[indexIP[x]].count >= 5):                       
                         self.check = 2
             else:
                 listFinScan = 0

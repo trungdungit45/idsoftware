@@ -9,17 +9,21 @@ def readIP():
             list.append(x)
         f.close()
         return list
-def checkLog():
+def checkLog(_listAlert, _listAlertStack):
     ip = readIP()
     for ift in ip:
         _lineLog = ift
-    #print(_lineLog)
     _warning, _root, _ipsource, _iptarget, _attack, _time, _timeStart, _date = _lineLog.split(':')
-    if (compareTime(_timeStart, datetime.datetime.now().strftime('%H%M%S'))._time <= 1):
-        strcontent = _timeStart +' Warning Attack ' + _attack + ' ' + _time + ' from '+ _ipsource + ' to ' + _iptarget + ' ' + _date 
-        #print(strcontent)
+    strcontent = _timeStart +' WA' + _attack + ' ' + _time + ' from '+ _ipsource + ' to ' + _iptarget + ' ' + _date 
+    if (strcontent not in _listAlert and strcontent not in _listAlertStack):
+        _listAlert.append(strcontent)
+
+    if (compareTime(_timeStart, datetime.datetime.now().strftime('%H%M%S'))._time <= 60
+    and strcontent in _listAlert 
+    and strcontent not in _listAlertStack):
         try:
             send_message(strcontent, 'Warning System')
-            #print('Sendmail Success')
+            _listAlert.remove(strcontent)
+            _listAlertStack.append(strcontent)  
         except:
             print('')

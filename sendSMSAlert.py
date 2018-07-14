@@ -1,24 +1,11 @@
-#from sendsms import sendSMS
+from sendsms import sendSMS
+import time 
 #from Detection.comparetime import compareTime
 import datetime
-import serial  
-import time
-def Sending(message, sender):
-    SerialPort = serial.Serial("/dev/ttyUSB3",19200)
-    SerialPort.write('AT+CMGF=1\r')
-    time.sleep(1)
-    SerialPort.write('AT+CMGS="'+sender+'"\r\n')
-    time.sleep(1)
-    SerialPort.write(message+"\x1A")
-    time.sleep(1)
-    print ('Bat dau gui tin, hay kt so dien thoai duoc gui')
-    SerialPort.close()
-def sendSMS(message, sender):
-    Sending(message,sender)
 class compareTime:
 	def __init__(self, timeStart, timeFinish):
-		_timeStart = int(timeStart[0:2])*3600 + int(timeStart[2:4]) + int(timeStart[4:6])
-		_timeFinish = int(timeFinish[0:2])*3600 + int(timeFinish[2:4]) + int(timeFinish[4:6])
+		_timeStart = int(timeStart[0:2])*3600 + int(timeStart[2:4])*60 + int(timeStart[4:6])
+		_timeFinish = int(timeFinish[0:2])*3600 + int(timeFinish[2:4])*60 + int(timeFinish[4:6])
 		if (_timeFinish < _timeStart):
 			self._time = ((_timeFinish + 86400) - _timeStart)
 		else:
@@ -31,20 +18,35 @@ def readIP():
             list.append(x)
         f.close()
         return list
-def checkLog():
-	sender = '01652582138'
+def checkLog(_listAlert, _listAlertStack):
+	sender = '01633248977'
 	ip = readIP()
 	for ift in ip:
 		_lineLog = ift
+	#print(_lineLog)
 	_warning, _root, _ipsource, _iptarget, _attack, _time, _timeStart, _date = _lineLog.split(':')
-	if (compareTime(_timeStart, datetime.datetime.now().strftime('%H%M%S'))._time <= 1):
-		strcontent = _timeStart +' WA' + _attack + ' ' + _time + ' from '+ _ipsource + ' to ' + _iptarget + ' ' + _date 
-		try:
-			sendSMS(strcontent, sender)           
-		except:
-			print('Check module sendsms')
+	strcontent = _timeStart +' WA' + _attack + ' ' + _time + ' from '+ _ipsource + ' to ' + _iptarget + ' ' + _date 
+	if (strcontent not in _listAlert and strcontent not in _listAlertStack):
+		_listAlert.append(strcontent)
+		#print(strcontent)
+	if (compareTime(_timeStart, datetime.datetime.now().strftime('%H%M%S'))._time <= 60
+	and strcontent in _listAlert 
+	and strcontent not in _listAlertStack):
+			#print(_time)
+			try:
+				sendSMS(strcontent, sender)
+				_listAlert.remove(strcontent)
+				_listAlertStack.append(strcontent)       
+			except:
+				print('Check module sendsms')
 def main():
+	_listAlertStack = []
+	_listAlert = []
 	while True:
-		checkLog()
+		checkLog(_listAlert, _listAlertStack)
+		#time.sleep(1)
 if __name__== '__main__':
     main()
+	
+	
+	

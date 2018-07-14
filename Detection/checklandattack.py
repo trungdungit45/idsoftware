@@ -8,6 +8,9 @@ class checkLandAttack:
 			if xft > 3:
 				self.check = 5
 			for x in range(0,xft):
-				if _listFrameEth[x].count >= 5:
+				#print('Day la chieu dai cua indexIP',_listFrameEth[x].ipsourc)
+				#print('Day la chieu dai cua indexIP',_listFrameEth[x].ipdesti)
+				#print('Day la chieu dai cua indexIP',_listFrameEth[x].count)
+				if _listFrameEth[indexIP[x]].count >= 5:					
 					self.check = 5       
 
